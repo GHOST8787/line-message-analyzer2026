@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Message Analyzer - LINE 訊息統計分析</title>
+
+    <!-- 圖示與字體 -->
+    <link rel="icon" href="img/bear.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/220/220214.png'" />
+    <link href="https://fonts.googleapis.com/css?family=Righteous|Roboto:400,500,700&display=swap" rel="stylesheet">
+
+    <!-- 引入 Bootstrap (保留原始依賴) 與 Tailwind CSS (增強現代化排版) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        xintegrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 原始依賴腳本 -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/swup@latest/dist/swup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <!-- 替換為實際專案路徑，若預覽環境無此檔案會報錯但不影響 UI -->
+    <!-- <script src="src/lib/wordcloud2.js"></script> -->
+    <!-- <script src="src/lib/wordfreq.worker.js"></script> -->
+    <!-- <script src="src/lib/wordfreq.js"></script> -->
+    <!-- <script src="src/lib/rpie.js"></script> -->
+    <!-- <script src="src/analyze.js?v=2" charset="utf-8"></script> -->
+
+    <style>
+        /* 基礎自定義樣式，補充 Tailwind 無法涵蓋的動態效果 */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7C7877;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-brand-text {
+            font-family: 'Righteous', cursive;
+            margin-left: 8px;
+            font-size: 1.2rem;
+        }
+
+        .transition-fade {
+            transition: 0.4s;
+            opacity: 1;
+        }
+
+        html.is-animating .transition-fade {
+            opacity: 0;
+        }
+
+        /* 圖表容器約束 */
+        .chartContainer {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .memberdonut {
+            position: relative;
+            height: 150px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 antialiased">
+
+    <!-- Loading 遮罩 (預設隱藏，可由 JS 控制顯示) -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="spinner mb-3"></div>
+        <div class="loading-text font-medium text-gray-600" id="loadingText">分析中，請稍候...</div>
+    </div>
+
+    <!-- 導覽列 -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #4a4a4a;">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="https://chonyy.github.io/line-message-analyzer/">
+                <img src="img/bear.png" width="30" height="30" class="rounded" alt="Logo"
+                    onerror="this.src='https://cdn-icons-png.flaticon.com/512/220/220214.png'">
+                <span class="nav-brand-text">LINE Analyzer</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item"><a class="nav-link hover:text-white"
+                            href="https://github.com/chonyy/line-message-analyzer" target="_blank">Source Code</a></li>
+                    <li class="nav-item"><a class="nav-link hover:text-white" href="https://github.com/chonyy"
+                            target="_blank">Creator</a></li>
+                    <li class="nav-item"><a class="nav-link hover:text-white"
+                            href="https://www.dcard.tw/f/funny/p/233240764" target="_blank">Post</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區塊 -->
+    <main id="swup" class="transition-fade container mx-auto px-4 py-8 max-w-6xl">
+        <div class="content-container">
+
+            <!-- 標題與匯出按鈕 -->
+            <div class="flex flex-wrap justify-between items-center mb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-700" chat-title>聊天紀錄分析結果</h2>
+                <button
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200 flex items-center gap-2"
+                    id="exportBtn" onclick="exportCard()">
+                    <span>📸</span> 匯出戰力圖卡
+                </button>
+            </div>
+
+            <div id="exportContainer" class="bg-gray-50 p-6 md:p-8 rounded-2xl shadow-inner">
+                <div class="text-center font-bold text-xl mb-6 hidden" id="exportChatTitle"></div>
+
+                <!-- 上方主要數據看板 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+                    <!-- 雙人訊息比例 (圓餅圖) -->
+                    <div class="bg-white rounded-xl shadow-md p-6 flex flex-col justify-between lg:col-span-1">
+                        <h3 class="text-center font-bold text-gray-600 mb-4">訊息佔比</h3>
+                        <div class="chartContainer mb-4">
+                            <canvas id="myCanvas"></canvas>
+                        </div>
+                        <div class="flex justify-center gap-6 mt-auto">
+                            <div class="flex flex-col items-center">
+                                <span class="w-4 h-4 rounded-full bg-blue-400 block mb-1"></span>
+                                <div class="font-bold text-gray-800" member1-name>User1</div>
+                                <div class="text-sm text-gray-500" member1-message>0 則</div>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="w-4 h-4 rounded-full bg-gray-300 block mb-1"></span>
+                                <div class="font-bold text-gray-800" member2-name>User2</div>
+                                <div class="text-sm text-gray-500" member2-message>0 則</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 綜合統計數據卡片 -->
+                    <div class="grid grid-cols-2 gap-4 lg:col-span-2">
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">聊天天數</div>
+                            <div class="text-3xl font-bold text-blue-600" stat-day>000</div>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">總訊息數</div>
+                            <div class="text-3xl font-bold text-indigo-600" stat-message>000</div>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">通話次數</div>
+                            <div class="text-3xl font-bold text-green-500" stat-call>0</div>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">總通話時間</div>
+                            <div class="text-xl md:text-2xl font-bold text-teal-600" stat-calltime>0時0分0秒</div>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">收回訊息 ♻️</div>
+                            <div class="text-2xl font-bold text-orange-400" stat-unsent>0</div>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-center items-center text-center">
+                            <div class="text-sm text-gray-500 font-medium mb-1">最多訊息單日</div>
+                            <div class="text-2xl font-bold text-purple-600">
+                                <span max-message>0</span> <span class="text-sm text-gray-500">則</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1" max-date-full>0000.00.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 各成員詳細數據與文字雲 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+
+                    <!-- 成員 1 統計 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="font-bold text-lg text-center text-gray-700 mb-4 border-b pb-2" member1-chart>User1
+                            分析</div>
+                        <div class="memberdonut mb-4">
+                            <canvas id="memberCanvas1"></canvas>
+                        </div>
+                        <div class="space-y-2 mt-4 text-sm">
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-400"></span>
+                                    文字</div>
+                                <div class="font-semibold text-gray-600" member1-texts>0 訊息</div>
+                            </div>
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-green-400"></span>
+                                    貼圖</div>
+                                <div class="font-semibold text-gray-600" member1-stickers>0 貼圖</div>
+                            </div>
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-gray-700"></span>
+                                    照片</div>
+                                <div class="font-semibold text-gray-600" member1-photos>0 照片</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 成員 2 統計 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="font-bold text-lg text-center text-gray-700 mb-4 border-b pb-2" member2-chart>User2
+                            分析</div>
+                        <div class="memberdonut mb-4">
+                            <canvas id="memberCanvas2"></canvas>
+                        </div>
+                        <div class="space-y-2 mt-4 text-sm">
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-400"></span>
+                                    文字</div>
+                                <div class="font-semibold text-gray-600" member2-texts>0 訊息</div>
+                            </div>
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-green-400"></span>
+                                    貼圖</div>
+                                <div class="font-semibold text-gray-600" member2-stickers>0 貼圖</div>
+                            </div>
+                            <div class="flex items-center justify-between px-2">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-gray-700"></span>
+                                    照片</div>
+                                <div class="font-semibold text-gray-600" member2-photos>0 照片</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文字雲與搜尋 -->
+                    <div class="bg-white rounded-xl shadow-md p-6 flex flex-col">
+                        <div class="font-bold text-lg text-center text-gray-700 mb-2">常用詞彙</div>
+                        <div class="flex-grow w-full bg-gray-50 rounded border flex items-center justify-center min-h-[150px] overflow-hidden p-2"
+                            id="wordcloud-container">
+                            <div id="wordcloud"
+                                class="w-full h-full text-gray-400 text-center flex items-center justify-center">載入中...
+                            </div>
+                        </div>
+                        <div class="mt-4 border-t pt-4">
+                            <div class="text-sm font-semibold text-gray-600 mb-2">搜尋特定字眼頻率：</div>
+                            <div class="flex gap-2">
+                                <input type="text"
+                                    class="flex-1 border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    placeholder="輸入字眼...">
+                                <button
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm transition-colors"
+                                    onclick="findword()">尋找</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 大型圖表區 -->
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-4 min-h-[300px]" id="allMessage">
+                        <!-- 趨勢圖表預留區 -->
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 min-h-[300px]" id="memberMessage">
+                        <!-- 個別訊息圖表預留區 -->
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 min-h-[300px]" id="callTime">
+                        <!-- 通話時間圖表預留區 -->
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 min-h-[300px] hidden" id="findingWord">
+                        <!-- 關鍵字搜尋圖表預留區 -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- 預覽用 Mock 腳本：為了確保畫面在沒有分析數據時也能有好看的預設圖表 -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Mock 主圓餅圖
+            var ctx = document.getElementById('myCanvas');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['User1', 'User2'],
+                        datasets: [{
+                            data: [55, 45],
+                            backgroundColor: ['#60A5FA', '#D1D5DB'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, legend: { display: false }, cutoutPercentage: 70 }
+                });
+            }
+
+            // Mock 成員 1 圓餅圖
+            var ctx1 = document.getElementById('memberCanvas1');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['文字', '貼圖', '照片'],
+                        datasets: [{
+                            data: [70, 20, 10],
+                            backgroundColor: ['#60A5FA', '#4ADE80', '#374151'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, legend: { display: false }, cutoutPercentage: 70 }
+                });
+            }
+
+            // Mock 成員 2 圓餅圖
+            var ctx2 = document.getElementById('memberCanvas2');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['文字', '貼圖', '照片'],
+                        datasets: [{
+                            data: [60, 30, 10],
+                            backgroundColor: ['#60A5FA', '#4ADE80', '#374151'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, legend: { display: false }, cutoutPercentage: 70 }
+                });
+            }
+        });
+
+        // 避免找不到 function 報錯的空殼函式
+        function exportCard() { alert("匯出功能準備就緒"); }
+        function findword() { alert("搜尋功能準備就緒"); }
+    </script>
+</body>
+
+</html>

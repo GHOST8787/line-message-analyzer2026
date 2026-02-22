@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Righteous&display=swap"
         rel="stylesheet">
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (取代 Bootstrap) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,37 +20,31 @@
                     fontFamily: {
                         sans: ['"Noto Sans TC"', 'Roboto', 'sans-serif'],
                         display: ['Righteous', 'sans-serif'],
-                        cute: ['"Kiwi Maru"', 'serif'],
                     },
                     colors: {
-                        bgPrimary: '#F0E5DE',
-                        cardPrimary: '#F1BBBA',
-                        textPrimary: '#7C7877',
-                        textLight: '#F0E5DE',
-                        accent: '#EB9F9F',
-                        btnPrimary: 'rgb(142, 184, 182)',
-                        btnDemo: '#699FC6',
+                        line: '#00B900',
+                        lineDark: '#009900',
+                        brandGray: '#7C7877',
                     }
                 }
             }
         }
     </script>
-    <link rel="stylesheet" href="style.css">
 
     <!-- 保留原有依賴的 JS 函式庫 -->
     <!-- 注意: 移除了 Bootstrap CSS，但若 analyze.js 有用到 jQuery 仍需保留 -->
-    <script defer src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script defer src="https://unpkg.com/swup@3"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/swup@3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <!-- 更新 Plotly.js 至明確的版本 (v2.32.0) 以解決 console 警告 -->
     <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-    <script defer src="src/lib/wordcloud2.js"></script>
-    <script defer src="src/lib/wordfreq.worker.js"></script>
-    <script defer src="src/lib/wordfreq.js"></script>
-    <script defer src="src/lib/rpie.js"></script>
-    <script defer src="src/analyze.js?v=2" charset="utf-8"></script>
+    <script src="src/lib/wordcloud2.js"></script>
+    <script src="src/lib/wordfreq.worker.js"></script>
+    <script src="src/lib/wordfreq.js"></script>
+    <script src="src/lib/rpie.js"></script>
+    <script src="src/analyze.js?v=2" charset="utf-8"></script>
 
     <title>Line Message Analyzer</title>
 
@@ -139,12 +133,11 @@
     </style>
 </head>
 
-<body class="text-textPrimary bg-bgPrimary relative">
+<body class="text-gray-800 relative">
 
     <!-- 拖曳與載入覆蓋層 (供 JS 控制) -->
     <div class="drop-overlay flex" id="dropOverlay" style="display:none;">
-        <svg class="w-16 h-16 text-textPrimary mb-4 animate-bounce" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
+        <svg class="w-16 h-16 text-line mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
         </svg>
@@ -156,8 +149,9 @@
     </div>
 
     <!-- 背景裝飾點綴 -->
-    <div class="bg-pattern hidden md:block">
-        <!-- Kept empty as per pink/brown solid bg requirement -->
+    <div class="bg-pattern">
+        <div class="blob bg-green-200 w-96 h-96 top-[-10%] left-[-10%]"></div>
+        <div class="blob bg-blue-100 w-96 h-96 bottom-[20%] right-[-5%]"></div>
     </div>
 
     <!-- 免責聲明 Banner -->
@@ -181,7 +175,7 @@
     </div>
 
     <!-- 導覽列 (毛玻璃特效) -->
-    <nav class="sticky top-0 z-40 bg-textPrimary/90 backdrop-blur-md shadow-md text-textLight">
+    <nav class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo & Brand -->
@@ -189,28 +183,26 @@
                     onclick="window.location.href='https://chonyy.github.io/line-message-analyzer/'">
                     <img src="img/bear.png" class="w-8 h-8 object-contain" alt="Logo"
                         onerror="this.style.display='none'">
-                    <span class="font-display font-bold text-xl tracking-wide">LINE <span
-                            class="text-accent">訊息分析</span></span>
+                    <span class="font-display font-bold text-xl text-gray-800 tracking-wide">LINE <span
+                            class="text-line">訊息分析</span></span>
                 </div>
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-8">
                     <a href="https://github.com/chonyy/line-message-analyzer" target="_blank"
-                        class="hover:text-accent transition font-medium text-sm border-b-2 border-transparent hover:border-accent">Source
-                        Code</a>
+                        class="text-gray-500 hover:text-line transition font-medium text-sm">Source Code</a>
                     <a href="https://github.com/chonyy" target="_blank"
-                        class="hover:text-accent transition font-medium text-sm border-b-2 border-transparent hover:border-accent">Creator</a>
+                        class="text-gray-500 hover:text-line transition font-medium text-sm">Creator</a>
                     <a href="https://www.dcard.tw/f/funny/p/233240764" target="_blank"
-                        class="hover:text-accent transition font-medium text-sm border-b-2 border-transparent hover:border-accent">Post</a>
+                        class="text-gray-500 hover:text-line transition font-medium text-sm">Post</a>
                     <a href="https://tenor.com/view/cat-loading-error-angry-fuck-gif-8985245" target="_blank"
-                        class="hover:text-accent transition font-medium text-sm border-b-2 border-transparent hover:border-accent">Image
-                        Source</a>
+                        class="text-gray-500 hover:text-line transition font-medium text-sm">Image Source</a>
                 </div>
 
-                <!-- Mobile Menu Button -->
+                <!-- Mobile Menu Button (簡易實作) -->
                 <div class="md:hidden flex items-center">
                     <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
-                        class="text-textLight hover:text-white focus:outline-none">
+                        class="text-gray-500 hover:text-gray-700 focus:outline-none">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
@@ -221,14 +213,14 @@
         </div>
         <!-- Mobile Menu -->
         <div id="mobile-menu"
-            class="hidden md:hidden bg-textPrimary border-t border-gray-600 px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg absolute w-full z-50">
+            class="hidden md:hidden bg-white border-t border-gray-100 px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg absolute w-full">
             <a href="https://github.com/chonyy/line-message-analyzer"
-                class="block px-3 py-2 rounded-md text-base font-medium text-textLight hover:text-white hover:bg-gray-700/50">Source
+                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-line hover:bg-gray-50">Source
                 Code</a>
             <a href="https://github.com/chonyy"
-                class="block px-3 py-2 rounded-md text-base font-medium text-textLight hover:text-white hover:bg-gray-700/50">Creator</a>
+                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-line hover:bg-gray-50">Creator</a>
             <a href="https://www.dcard.tw/f/funny/p/233240764"
-                class="block px-3 py-2 rounded-md text-base font-medium text-textLight hover:text-white hover:bg-gray-700/50">Post</a>
+                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-line hover:bg-gray-50">Post</a>
         </div>
     </nav>
 
@@ -237,17 +229,17 @@
 
         <!-- Hero Section -->
         <div class="text-center max-w-3xl mx-auto mb-16 mt-8">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-textPrimary mb-6 tracking-tight">
-                LINE <span class="text-accent">訊息分析</span>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-6 tracking-tight">
+                LINE <span class="text-line">訊息分析</span>
             </h1>
-            <p class="text-lg md:text-xl text-textPrimary/80 mb-10 font-medium">
+            <p class="text-lg md:text-xl text-gray-500 mb-10 font-medium">
                 以最直觀的數字和視覺化圖表，重新探索您的對話紀錄。
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
                 <!-- 載入按鈕 -->
                 <button onclick="document.getElementById('file').click();"
-                    class="w-full sm:w-auto px-8 py-4 bg-btnPrimary hover:opacity-90 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
+                    class="w-full sm:w-auto px-8 py-4 bg-line hover:bg-lineDark text-white rounded-full font-bold text-lg shadow-lg shadow-green-200 transition-all transform hover:-translate-y-1 hover:shadow-xl flex justify-center items-center gap-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
@@ -258,8 +250,8 @@
 
                 <!-- 範例按鈕 -->
                 <button onclick="if(typeof samplefile === 'function') samplefile();"
-                    class="w-full sm:w-auto px-8 py-4 bg-btnDemo text-white hover:opacity-90 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-full sm:w-auto px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 rounded-full font-bold text-lg shadow-sm transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
@@ -272,22 +264,22 @@
         <!-- 截圖展示區塊 -->
         <div class="flex flex-col md:flex-row gap-6 justify-center items-center mb-24">
             <!-- 桌面版圖片 (Desktop only) -->
-            <div class="hidden md:block w-full max-w-lg transform transition hover:scale-105 hover:z-10">
-                <div class="bg-cardPrimary p-2 rounded-2xl shadow-xl">
-                    <img src="img/demo1.png" alt="Demo 1" class="w-full h-auto rounded-xl object-cover"
+            <div class="hidden md:block w-full max-w-sm transform transition hover:scale-105 hover:z-10">
+                <div class="bg-white p-2 rounded-2xl shadow-xl border border-gray-100">
+                    <img src="img/demo1.PNG" alt="Demo 1" class="w-full h-auto rounded-xl object-cover"
                         onerror="this.src='https://via.placeholder.com/400x600?text=Demo+Image+1'">
                 </div>
             </div>
-            <div class="hidden md:block w-full max-w-lg transform transition hover:scale-105 hover:z-10 -ml-4 mt-8">
-                <div class="bg-cardPrimary p-2 rounded-2xl shadow-xl">
-                    <img src="img/demo2.png" alt="Demo 2" class="w-full h-auto rounded-xl object-cover"
+            <div class="hidden md:block w-full max-w-sm transform transition hover:scale-105 hover:z-10 -ml-4 mt-8">
+                <div class="bg-white p-2 rounded-2xl shadow-xl border border-gray-100">
+                    <img src="img/demo2.PNG" alt="Demo 2" class="w-full h-auto rounded-xl object-cover"
                         onerror="this.src='https://via.placeholder.com/400x600?text=Demo+Image+2'">
                 </div>
             </div>
             <!-- 手機版圖片 (Mobile only) -->
             <div class="md:hidden w-full max-w-xs mx-auto">
-                <div class="bg-cardPrimary p-2 rounded-3xl shadow-2xl">
-                    <img src="img/demo-mobile.png" alt="Mobile Demo" class="w-full h-auto rounded-2xl object-cover"
+                <div class="bg-white p-2 rounded-3xl shadow-2xl border-4 border-gray-100">
+                    <img src="img/demo-mobile.PNG" alt="Mobile Demo" class="w-full h-auto rounded-2xl object-cover"
                         onerror="this.src='https://via.placeholder.com/300x600?text=Mobile+Demo'">
                 </div>
             </div>
@@ -296,22 +288,24 @@
         <!-- 教學步驟區塊 -->
         <div class="max-w-5xl mx-auto">
             <div class="text-center mb-12">
-                <h2
-                    class="text-3xl font-extrabold text-textPrimary inline-block relative border-b-4 border-accent pb-2">
+                <h2 class="text-3xl font-extrabold text-gray-900 inline-block relative">
                     如何匯出聊天紀錄？
+                    <div class="absolute bottom-0 left-0 w-full h-3 bg-green-200 -z-10 transform -translate-y-1"></div>
                 </h2>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Step 1 -->
-                <div class="bg-cardPrimary rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition">
+                <div
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition">
                     <div class="p-6">
                         <span
-                            class="inline-block px-3 py-1 bg-white/50 text-textPrimary text-xs font-bold rounded-full mb-3 tracking-wide">步驟一</span>
-                        <h3 class="text-lg font-bold text-textPrimary mb-4">請先點選右上方「選單」圖示</h3>
+                            class="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full mb-3 tracking-wide">iOS
+                            步驟一</span>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">請先點選右上方「選單」圖示</h3>
                         <div
-                            class="bg-white/80 rounded-xl flex justify-center items-center aspect-[9/16] overflow-hidden">
-                            <img src="img/info-ios1.jpg" class="object-cover h-full w-full mix-blend-multiply"
+                            class="bg-gray-50 rounded-xl flex justify-center items-center h-48 overflow-hidden border border-gray-100">
+                            <img src="img/info-ios1.jpg" class="object-contain h-full w-full mix-blend-multiply"
                                 alt="iOS Step 1"
                                 onerror="this.src='https://via.placeholder.com/400x200?text=Image+Not+Found'">
                         </div>
@@ -319,14 +313,16 @@
                 </div>
 
                 <!-- Step 2 -->
-                <div class="bg-cardPrimary rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition">
+                <div
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition">
                     <div class="p-6">
                         <span
-                            class="inline-block px-3 py-1 bg-white/50 text-textPrimary text-xs font-bold rounded-full mb-3 tracking-wide">步驟二</span>
-                        <h3 class="text-lg font-bold text-textPrimary mb-4">接著點選右下方的「齒輪」設定</h3>
+                            class="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full mb-3 tracking-wide">iOS
+                            步驟二</span>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">接著點選右下方的「齒輪」設定</h3>
                         <div
-                            class="bg-white/80 rounded-xl flex justify-center items-center aspect-[9/16] overflow-hidden">
-                            <img src="img/info-ios2.jpg" class="object-cover h-full w-full mix-blend-multiply"
+                            class="bg-gray-50 rounded-xl flex justify-center items-center h-48 overflow-hidden border border-gray-100">
+                            <img src="img/info-ios2.jpg" class="object-contain h-full w-full mix-blend-multiply"
                                 alt="iOS Step 2"
                                 onerror="this.src='https://via.placeholder.com/400x200?text=Image+Not+Found'">
                         </div>
@@ -334,14 +330,16 @@
                 </div>
 
                 <!-- Step 3 -->
-                <div class="bg-cardPrimary rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition">
+                <div
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition">
                     <div class="p-6">
                         <span
-                            class="inline-block px-3 py-1 bg-white/50 text-textPrimary text-xs font-bold rounded-full mb-3 tracking-wide">步驟三</span>
-                        <h3 class="text-lg font-bold text-textPrimary mb-4">點選右上方選單後，再點選齒輪</h3>
+                            class="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full mb-3 tracking-wide">Android
+                            步驟</span>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">點選右上方選單後，再點選齒輪</h3>
                         <div
-                            class="bg-white/80 rounded-xl flex justify-center items-center aspect-[9/16] overflow-hidden">
-                            <img src="img/info-android.jpg" class="object-cover h-full w-full mix-blend-multiply"
+                            class="bg-gray-50 rounded-xl flex justify-center items-center h-48 overflow-hidden border border-gray-100">
+                            <img src="img/info-android.jpg" class="object-contain h-full w-full mix-blend-multiply"
                                 alt="Android Step"
                                 onerror="this.src='https://via.placeholder.com/400x200?text=Image+Not+Found'">
                         </div>
@@ -349,14 +347,15 @@
                 </div>
 
                 <!-- Step 4 -->
-                <div class="bg-cardPrimary rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition">
+                <div
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition">
                     <div class="p-6">
                         <span
-                            class="inline-block px-3 py-1 bg-white/50 text-textPrimary text-xs font-bold rounded-full mb-3 tracking-wide">步驟四</span>
-                        <h3 class="text-lg font-bold text-textPrimary mb-4">傳送聊天紀錄後，從網頁上方載入</h3>
+                            class="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full mb-3 tracking-wide">最後步驟</span>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">傳送聊天紀錄後，從網頁上方載入</h3>
                         <div
-                            class="bg-white/80 rounded-xl flex justify-center items-center aspect-[9/16] overflow-hidden">
-                            <img src="img/info-last.jpg" class="object-cover h-full w-full mix-blend-multiply"
+                            class="bg-gray-50 rounded-xl flex justify-center items-center h-48 overflow-hidden border border-gray-100">
+                            <img src="img/info-last.jpg" class="object-contain h-full w-full mix-blend-multiply"
                                 alt="Final Step"
                                 onerror="this.src='https://via.placeholder.com/400x200?text=Image+Not+Found'">
                         </div>
