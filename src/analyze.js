@@ -59,7 +59,7 @@ function getFile() {
 
 async function samplefile() {
     showLoading();
-    const text = await fetch('./sample/sample.txt');
+    const text = await fetch('./TEST/test_zh.txt');
     content = (await text.text());
     changePage();
 }
